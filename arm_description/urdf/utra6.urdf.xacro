@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)">
+
+   <xacro:arg name="name" default="utra6"/>
+   <!-- 
+     possible 'arm_type' values: utra6_550, utra6_850, utra6_1000, utra6_1500
+     the default value should raise an error in case this was called without defining the type 
+   -->
+   <xacro:arg name="arm_type" default="utra6"/>
+   <xacro:arg name="prefix" default="" />
+   <xacro:arg name="safety_limits" default="false"/>
+   <xacro:arg name="safety_pos_margin" default="0.15"/>
+   <xacro:arg name="safety_k_position" default="20"/>
+
+   <xacro:arg name="robot_ip" default="0.0.0.0" />
+   <xacro:arg name="transmission_hw_interface" default=""/>
+   <xacro:arg name="headless_mode" default="false" />
+
+   <!-- Simulation parameters -->
+   <xacro:arg name="use_fake_hardware" default="false" />
+   <xacro:arg name="fake_sensor_commands" default="false" />
+   <xacro:arg name="sim_gazebo" default="false" />
+   <xacro:arg name="sim_ignition" default="false" />
+   <xacro:arg name="simulation_controllers" default="" />
+
+
+   <xacro:include filename="$(find arm_description)/urdf/utra6_macro.xacro"/>
+   <link name="world" />
+   <xacro:utra6_robot
+     name="$(arg name)"
+     prefix="$(arg prefix)"
+     arm_type="$(arg arm_type)"
+     safety_limits="$(arg safety_limits)"
+     safety_pos_margin="$(arg safety_pos_margin)"
+     safety_k_position="$(arg safety_k_position)"
+
+     parent="world"
+     robot_ip="$(arg robot_ip)"
+     transmission_hw_interface="$(arg transmission_hw_interface)"
+     headless_mode="$(arg headless_mode)"
+     
+     use_fake_hardware="$(arg use_fake_hardware)"
+     fake_sensor_commands="$(arg fake_sensor_commands)"
+     sim_gazebo="$(arg sim_gazebo)"
+     sim_ignition="$(arg sim_ignition)"
+     >
+     <origin xyz="0 0 0" rpy="0 0 0" />
+   </xacro:utra6_robot>
+
+   <xacro:if value="$(arg sim_gazebo)">
+    <gazebo reference="world"></gazebo>
+    <gazebo>
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <parameters>$(arg simulation_controllers)</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+  <xacro:if value="$(arg sim_ignition)">
+    <gazebo reference="world"></gazebo>
+    <gazebo>
+      <plugin filename="libign_ros2_control-system.so" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+        <parameters>$(arg simulation_controllers)</parameters>
+        <controller_manager_node_name>$(arg prefix)controller_manager</controller_manager_node_name>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+</robot>
